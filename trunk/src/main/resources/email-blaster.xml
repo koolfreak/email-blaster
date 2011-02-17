@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:amq="http://activemq.apache.org/schema/core"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
+		http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+	
+	<!--  lets create an embedded ActiveMQ Broker
+	<amq:broker useJmx="false" persistent="false">
+		<amq:transportConnectors>
+			<amq:transportConnector uri="tcp://localhost:61616" />
+		</amq:transportConnectors>
+	</amq:broker>  -->
+	
+	<context:property-placeholder location="classpath:mail.properties"/>
+	
+	<!-- JMS - ActiveMQ connection -->
+	<bean id="connectionFactory"
+		class="org.apache.activemq.ActiveMQConnectionFactory">
+		<property name="brokerURL" value="tcp://localhost:61616" />
+	</bean>
+	
+	<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<property name="host" value="${mail.host}" />
+		<property name="port" value="${mail.port}" />
+		<property name="protocol" value="${mail.protocol}" />
+		<property name="username" value="${mail.username}" />
+		<property name="password" value="${mail.password}" />
+		<property name="javaMailProperties">
+			<props>
+				<prop key="mail.smtp.auth">true</prop>
+				<prop key="mail.smtp.starttls.enable">true</prop>
+			</props>
+		</property>
+	</bean>
+	
+	<bean id="templateMessage" class="org.springframework.mail.SimpleMailMessage">
+		<property name="from" value="${mail.from}" />
+	</bean>
+	
+	<bean id="emailSender" class="com.cybernetics.mail.EmailSenderImpl">
+		<property name="mailSender" ref="mailSender" />
+		<property name="templateMessage" ref="templateMessage" />
+		<property name="velocityEngine" ref="velocityEngine"/>
+	</bean>
+	
+
+	<bean id="velocityEngine"
+		class="org.springframework.ui.velocity.VelocityEngineFactoryBean">
+		<property name="velocityProperties">
+			<props>
+
+				<prop key="resource.loader">class</prop>
+				<prop key="class.resource.loader.class">
+					org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader
+				</prop>
+				<prop key="class.resource.loader.cache">true</prop>
+			</props>
+		</property>
+	</bean>
+	
+	<!-- JMS QUEUE'S DESTINATION -->
+        <bean id="resultDestination" class="org.apache.activemq.command.ActiveMQQueue">
+                <constructor-arg value="EMAIL_BLASTER.RESULT_QUEUE"/>
+        </bean>
+        
+         <!-- RESULT JMS QUEUE -->
+        <bean id="resultQueueTemplate" class="org.springframework.jms.core.JmsTemplate">
+                <property name="connectionFactory" ref="connectionFactory"/>
+                <property name="defaultDestination" ref="resultDestination"/>
+        </bean>
+        <bean id="emailQueue" class="com.cybernetics.mail.queue.EmailQueueImpl">
+                <property name="jmsTemplate" ref="resultQueueTemplate"/>
+        </bean>
+        <!-- RESULT JMS QUEUE LISTENER -->
+        <bean id="resultListenerContainer" class="org.springframework.jms.listener.SimpleMessageListenerContainer">
+            <property name="connectionFactory" ref="connectionFactory"/>
+            <property name="destination" ref="resultDestination"/>
+            <property name="messageListener" ref="resultListener" />
+        </bean>
+        
+        <!-- MP Email listener only -->
+        <bean id="resultListener" class="com.cybernetics.mail.queue.listener.MPEmailListener">
+        	<property name="emailSender" ref="emailSender"/>
+        </bean>
+	
+
+</beans>
