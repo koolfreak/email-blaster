@@ -49,24 +49,20 @@ public class EmailSenderImpl implements EmailSender {
 	}
 	
 	@Override
-	public void sendEticket(final Map<String, String> infos) {
+	public void sendMPEmails(final Map<String, String> infos) {
 		
 		MimeMessagePreparator emailPrep = new MimeMessagePreparator() {
 			@Override
 			public void prepare(MimeMessage mimeMsg) throws Exception {
 				 MimeMessageHelper message = new MimeMessageHelper(mimeMsg);
 				 message.setTo(infos.get("to"));
-				 message.setFrom(new InternetAddress("cooleman_99@yahoo.com", "MP - Health Care"));
+				 message.setFrom(new InternetAddress("eman.nollase@gmail.com","MP - Health Care"));
 				 message.setSubject(infos.get("subject"));
 				 
-				 Map<String, String> cust = new HashMap<String, String>();
-				 cust.put("customer", infos.get("customer"));
-				 
-				 String text = VelocityEngineUtils.mergeTemplateIntoString(velocityEngine, infos.get("mailTemplate"), cust);
+				 String text = VelocityEngineUtils.mergeTemplateIntoString(velocityEngine, infos.get("mailTemplate"), infos);
 				 message.setText(text, true);
 			}
 		};
-		
 		this.mailSender.send(emailPrep);
 	}
 }

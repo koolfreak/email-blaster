@@ -11,5 +11,5 @@ import java.util.Map;
  */
 public interface EmailSender {
 
-	void sendEticket(final Map<String, String> infos);
+	void sendMPEmails(final Map<String, String> infos);
 }
