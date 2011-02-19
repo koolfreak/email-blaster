@@ -31,9 +31,11 @@ public class MPEmailListener implements MessageListener {
 		ActiveMQMapMessage amq = (ActiveMQMapMessage) message;
 		try {
 			Map<String, String> emailInfos = (Map<String, String>) amq.getObject("mpInfos");
-			emailSender.sendEticket(emailInfos);
+			emailSender.sendMPEmails(emailInfos);
 		} catch (JMSException e) {
-			log.error("Error sending email", e);
+			log.error("JMS error occured", e);
+		}catch (Exception e) {
+			log.error(e);
 		}
 	}
 	
