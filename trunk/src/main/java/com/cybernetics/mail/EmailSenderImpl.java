@@ -56,7 +56,7 @@ public class EmailSenderImpl implements EmailSender {
 			public void prepare(MimeMessage mimeMsg) throws Exception {
 				 MimeMessageHelper message = new MimeMessageHelper(mimeMsg);
 				 message.setTo(infos.get("to"));
-				 message.setFrom(new InternetAddress("eman.nollase@gmail.com","MP - Health Care"));
+				 message.setFrom(new InternetAddress("eman.nollase@gmail.com",infos.get("tagline")));
 				 message.setSubject(infos.get("subject"));
 				 
 				 String text = VelocityEngineUtils.mergeTemplateIntoString(velocityEngine, infos.get("mailTemplate"), infos);
